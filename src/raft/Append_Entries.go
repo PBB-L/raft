@@ -62,7 +62,26 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs,reply *AppendEntriesReply)
 	}
 }
 
-
+// 成为领导者发送的 空心跳包
 func (rf *Raft) appendEntries(isLeader bool) {
+	// Ruler for Servers : Leaders 1
+	for serverId := range rf.peers {
+		if serverId == rf.me {
+			rf.resetElectionTime()
+			continue
+		}
+		// Ruler for Servers : Leaders 3
+		if rf.log.lastLog().Index >= rf.nextIndex[serverId] {
 
+		}
+	}
+}
+
+// 5.3
+func (rf *Raft) leaderSendEntries(serverId int,args *AppendEntriesArgs){
+
+}
+
+func (rf *Raft) leaderCommitRule() {
+	// Ruler for Servers : Leaders 4
 }

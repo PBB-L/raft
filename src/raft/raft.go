@@ -99,30 +99,13 @@ type Raft struct {
 	matchIndex []int
 
 	applyCh chan ApplyMsg 	// 发送 ApplyMsg 的channel
-	applyCond  *sync.Cond 	//
-}
-
-// return currentTerm and whether this server believes it is the leader.
-// 返回 currentTerm 以及该服务器是否认为它是领导者。
-
-func (rf *Raft) GetState() (int, bool) {
-
-	var term int
-	var isleader bool
-	// Your code here (2A).
-	term = rf.currentTerm
-	if rf.state == Leader {
-		isleader = true
-	}else {
-		isleader = false
-	}
-	return term, isleader
+	applyCond  *sync.Cond 	// 发送 ApplyMsg 的变量
 }
 
 //
-// save Raft's persistent state to stable storage, 将 Raft 的持久状态保存到稳定的存储中，
-// where it can later be retrieved after a crash and restart. 崩溃后可以在其中检索它并重新启动。
-// see paper's Figure 2 for a description of what should be persistent. 请参阅论文的图 2，了解应该持久化的内容。
+// save Raft's persistent state to stable storage,
+// where it can later be retrieved after a crash and restart.
+// see paper's Figure 2 for a description of what should be persistent.
 //
 func (rf *Raft) persist() {
 	// Your code here (2C).
@@ -180,33 +163,33 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 }
 
 //
-// example code to send a RequestVote RPC to a server. 将 RequestVote RPC 发送到服务器的代码
-// server is the index of the target server in rf.peers[]. server 是 rf.peers[] 中目标服务器的索引
+// example code to send a RequestVote RPC to a server.
+// server is the index of the target server in rf.peers[].
 // expects RPC arguments in args. 期望 args 中的 RPC 参数
 // fills in *reply with RPC reply, so caller should
 // pass &reply. 用 RPC 回复填写 *reply，所以调用者应该通过 &reply
 // the types of the args and reply passed to Call() must be
 // the same as the types of the arguments declared in the
-// handler function (including whether they are pointers). 传递给 Call() 的参数和回复的类型必须与处理函数中声明的参数的类型相同（包括它们是否是指针）。
+// handler function (including whether they are pointers).
 //
 // The labrpc package simulates a lossy network, in which servers
-// may be unreachable, and in which requests and replies may be lost. labrpc 包模拟了一个有损网络，其中服务器可能无法访问，并且请求和回复可能会丢失。
+// may be unreachable, and in which requests and replies may be lost.
 // Call() sends a request and waits for a reply. If a reply arrives
 // within a timeout interval, Call() returns true; otherwise
-// Call() returns false. Thus Call() may not return for a while.	 Call() 发送请求并等待回复。 如果回复在超时间隔内到达，则 Call() 返回 true； 否则 Call() 返回 false。 因此 Call() 可能暂时不会返回
+// Call() returns false. Thus Call() may not return for a while.
 // A false return can be caused by a dead server, a live server that
-// can't be reached, a lost request, or a lost reply. 错误返回可能由损害的服务器、无法访问的活动服务器、丢失的请求或丢失的回复引起。
+// can't be reached, a lost request, or a lost reply.
 //
 // Call() is guaranteed to return (perhaps after a delay) *except* if the
 // handler function on the server side does not return.  Thus there
-// is no need to implement your own timeouts around Call().  如果服务器端的处理函数没有返回，则 Call() 保证返回（可能在延迟之后）*except*。 因此，无需围绕 Call() 实现您自己的超时。
+// is no need to implement your own timeouts around Call().
 //
 // look at the comments in ../labrpc/labrpc.go for more details.
 //
 // if you're having trouble getting RPC to work, check that you've
 // capitalized all field names in structs passed over RPC, and
 // that the caller passes the address of the reply struct with &, not
-// the struct itself. 如果您无法让 RPC 工作，请检查您是否已将通过 RPC 传递的结构中的所有字段名称大写，并且调用者使用 & 传递回复结构的地址，而不是结构本身。
+// the struct itself.
 //
 
 
@@ -236,14 +219,14 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 }
 
 //
-// the tester doesn't halt goroutines created by Raft after each test, 	每次测试后，测试人员不会停止 Raft 创建的 goroutines，
-// but it does call the Kill() method. your code can use killed() to 	但它确实调用了 Kill() 方法。
-// check whether Kill() has been called. the use of atomic avoids the 	您的代码可以使用killed() 来检查是否调用了Kill()。
-// need for a lock.														atomic 的使用避免了对锁的需要。
+// the tester doesn't halt goroutines created by Raft after each test,
+// but it does call the Kill() method. your code can use killed() to
+// check whether Kill() has been called. the use of atomic avoids the
+// need for a lock.
 //
-// the issue is that long-running goroutines use memory and may chew 	长时间运行的 goroutine 会占用内存并且可能会占用 CPU 时间，
-// up CPU time, perhaps causing later tests to fail and generating		可能会导致以后的测试失败并产生令人困惑的调试输出。
-// confusing debug output. any goroutine with a long-running loop		任何具有长时间运行循环的 goroutine 都应该调用 killed() 来检查它是否应该停止。
+// the issue is that long-running goroutines use memory and may chew
+// up CPU time, perhaps causing later tests to fail and generating
+// confusing debug output. any goroutine with a long-running loop
 // should call killed() to check whether it should stop.
 //
 func (rf *Raft) Kill() {
@@ -269,11 +252,7 @@ func (rf *Raft) ticker() {
 		time.Sleep(rf.heartBeat)
 		rf.mu.Lock()
 		if rf.state == Leader {
-			for serverId := range rf.peers{
-				if serverId != rf.me {
-					rf.appendEntries(true)
-				}
-			}
+			rf.appendEntries(true)
 		}
 		if time.Now().After(rf.electionTime){ //  判断 当前本地的时间  是否在 rf.electionTime 之后
 			// 到rf.electionTime 就开始领导者选举
@@ -284,11 +263,11 @@ func (rf *Raft) ticker() {
 }
 
 //
-// the service or tester wants to create a Raft server. the ports  		服务或测试人员想要创建一个 Raft 服务器。 所有 Raft 服务器（包括这个）的端口都在 peers[] 中。
-// of all the Raft servers (including this one) are in peers[]. this 	此服务器的端口是 peers[me]。 所有服务器的 peers[] 数组都具有相同的顺序。
-// server's port is peers[me]. all the servers' peers[] arrays			persister 是此服务器保存其持久状态的地方，并且最初还保存最近保存的状态（如果有）。
-// have the same order. persister is a place for this server to			applyCh 是测试人员或服务期望 Raft 发送 ApplyMsg 消息的通道。
-// save its persistent state, and also initially holds the most			Make() 必须快速返回，因此它应该为任何长时间运行的工作启动 goroutine。
+// the service or tester wants to create a Raft server. the ports
+// of all the Raft servers (including this one) are in peers[]. this
+// server's port is peers[me]. all the servers' peers[] arrays
+// have the same order. persister is a place for this server to
+// save its persistent state, and also initially holds the most
 // recent saved state, if any. applyCh is a channel on which the
 // tester or service expects Raft to send ApplyMsg messages.
 // Make() must return quickly, so it should start goroutines
@@ -302,8 +281,23 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.me = me
 
 	// Your initialization code here (2A, 2B, 2C).
+	rf.currentTerm = 0
+	rf.state = Follower
+	rf.votedFor = -1
+	rf.log = rf.log.makeEmptyLog()
+	rf.log.append(Entry{-1,0,0})
 
+	rf.resetElectionTime()
 
+	rf.commitIndex = 0
+	rf.lastApplied = 0
+	rf.nextIndex = make([]int,len(peers))
+	rf.matchIndex = make([]int,len(peers))
+
+	rf.applyCh = applyCh
+	rf.applyCond = sync.NewCond(&rf.mu)
+
+	rf.heartBeat = 50 * time.Millisecond
 
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
@@ -311,6 +305,19 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	// start ticker goroutine to start elections
 	go rf.ticker()
 
-
 	return rf
+}
+
+func (rf *Raft) apply() {
+
+}
+
+func (rf *Raft) applier() {
+
+	// all server rule 1
+}
+
+func (rf *Raft) commits() string {
+
+	return string(rf.state)
 }
